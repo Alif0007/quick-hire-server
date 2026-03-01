@@ -1,160 +1,149 @@
-# QuickHire Backend API
+# QuickHire Backend
 
-This is the backend API for the QuickHire application, built with Node.js, Express, and MongoDB (using the native MongoDB driver without Mongoose).
+QuickHire is a comprehensive job board application that connects job seekers with employers. The backend is built with Node.js and Express and provides a robust API for managing jobs and applications.
 
 ## Features
 
--✅ MongoDB Atlas connection (native driver)
-- ✅ RESTful API endpoints
-- ✅ CRUD operations for jobs
-- ✅ Health check endpoints
-- ✅ Database connection testing
-- ✅ Environment configuration
-- ✅ CORS support
-- ✅ Error handling
+- **RESTful API**: Well-structured API endpoints for all application features
+- **MongoDB Integration**: Robust database storage for jobs and applications
+- **CRUD Operations**: Full Create, Read, Update, Delete operations for jobs and applications
+- **Admin Functions**: Dedicated endpoints for administrative tasks
+- **Error Handling**: Comprehensive error handling and validation
+- **CORS Support**: Configured for cross-origin resource sharing
+
+## Tech Stack
+
+- Node.js
+- Express.js
+- MongoDB (with native driver)
+- CORS
+- Dotenv (environment configuration)
 
 ## Prerequisites
 
-- Node.js v14 or higher
-- MongoDB Atlas account (connection string provided)
+- Node.js (v16 or higher)
 - npm or yarn
+- MongoDB (either local installation or MongoDB Atlas account)
 
-## Setup
+## Installation & Setup
 
-1. Navigate to the backend directory:
-```bash
-cd backend
-```
+1. **Clone the repository** (if applicable) or navigate to the project directory:
+   ```bash
+   cd backend
+   ```
 
-2. Install dependencies:
-```bash
-npm install
-```
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-3. Environment variables are already configured in `.env`:
-```env
-MONGODB_URI=mongodb+srv://alaminalif373:zXQTrtLWYIJ0j485@book-shelf.ixjlonr.mongodb.net/?appName=Book-Shelf
-PORT=5000
-NODE_ENV=development
-APP_NAME=QuickHire
-```
+3. **Environment Variables**:
+   Create a `.env` file in the backend root directory with the following variables:
+   ```
+   PORT=5000
+   MONGODB_URI=mongodb://localhost:27017/quickhire
+   ```
+   
+   Or if using MongoDB Atlas:
+   ```
+   PORT=5000
+   MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/quickhire?retryWrites=true&w=majority
+   ```
+   
+   Note: Adjust the MongoDB URI to match your setup.
 
-## Running the Application
+4. **Run the development server**:
+   ```bash
+   npm run dev
+   ```
+   
+   Or for production:
+   ```bash
+   npm start
+   ```
 
-### Development Mode
-```bash
-npm run dev
-```
-
-### Production Mode
-```bash
-npm start
-```
+5. The server will start on the port specified in your `.env` file (default: `http://localhost:5000`)
 
 ## API Endpoints
 
-### Base URL
-```
-http://localhost:5000
-```
-
-### Health & Connection Endpoints
-
-- `GET /` - API root endpoint
-- `GET /api/health` - Health check
-- `GET /api/test-connection` - Test MongoDB connection
-
-### Jobs Endpoints
-
+### Jobs
 - `GET /api/jobs` - Get all jobs
-- `POST /api/jobs` - Create a new job
+- `GET /api/jobs/:id` - Get a specific job
+- `POST /api/jobs` - Create a new job (admin only)
+- `DELETE /api/jobs/:id` - Delete a job (admin only)
 
-## Database Structure
+### Applications
+- `GET /api/applications` - Get all applications (admin only)
+- `POST /api/applications` - Submit a new application
+- `DELETE /api/applications/:id` - Delete an application (admin only)
 
-The application uses MongoDB with the following collections:
-
-### Jobs Collection
-```javascript
-{
-  title: String,
-  company: String,
-  location: String,
-  salary: String,
-  type: String,
-  description: String,
-  requirements: Array,
-  postedDate: Date,
-  createdAt: Date,
-  updatedAt: Date
-}
-```
-
-## Testing
-
-Run the database test script to verify all operations:
-```bash
-node test-db.js
-```
-
-This will test:
-- Database connection
-- Insert operations
-- Find operations
-- Update operations
-- Delete operations
+### Health Checks
+- `GET /api/health` - Health check endpoint
+- `GET /api/test-connection` - Database connection test
 
 ## Project Structure
 
 ```
 backend/
 ├── config/
-│   └── db.js          # MongoDB connection logic
-├── .env               # Environment variables
-├── package.json       # Dependencies and scripts
-├── server.js          # Main server file
-├── test-db.js         # Database test script
-└── README.md          # This file
+│   └── db.js           # Database configuration
+├── server.js           # Main server file
+├── package.json
+└── .env                # Environment variables (not committed)
 ```
 
-## MongoDB Connection
+## Database Schema
 
-The backend connects to MongoDB Atlas using the native MongoDB driver. Key features:
+### Jobs Collection
+```javascript
+{
+  _id: ObjectId,
+  title: String,
+  company: String,
+  location: String,
+  salary: String,
+  type: String,
+  description: String,
+  requirements: [String],
+  benefits: [String],
+  category: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+```
 
--✅ Automatic connection management
-- ✅ Connection testing on startup
-- ✅ Graceful shutdown handling
-- ✅ Error handling and logging
-- ✅ Collection helper methods
+### Applications Collection
+```javascript
+{
+  _id: ObjectId,
+  jobId: String,
+  applicantName: String,
+  email: String,
+  resume: String,
+  coverLetter: String,
+  status: String, // pending, approved, rejected
+  appliedAt: Date
+}
+```
 
-## Development Notes
+## Running Tests
 
-- The server runs on port 5000 by default
-- MongoDB database name: `quickhire`
-- All timestamps are stored in ISO format
-- CORS is enabled for frontend integration
-- Environment-based configuration
+Currently, the application doesn't include automated tests. You can manually test the API endpoints using tools like Postman or curl.
 
-## Troubleshooting
+## Contributing
 
-### Common Issues
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Commit your changes (`git commit -m 'Add some amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
-1. **Connection Failed**: Verify MongoDB URI and network connectivity
-2. **Port Already in Use**: Change PORT in `.env` file
-3. **Missing Dependencies**: Run `npm install` again
+## Environment Variables
 
-### Logs
+- `PORT`: Port number for the server (default: 5000)
+- `MONGODB_URI`: Connection string for MongoDB database
 
-The application provides detailed logging:
-- Connection status
-- Database operations
-- API requests
-- Error messages
+## License
 
-## Next Steps
-
-- Add authentication middleware
-- Implement user management
-- Add more CRUD operations
-- Implement data validation
-- Add pagination for large datasets
-- Add search and filtering capabilities
+This project is licensed under the MIT License.

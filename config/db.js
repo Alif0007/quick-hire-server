@@ -23,7 +23,7 @@ class Database {
             this.client = new MongoClient(uri);
 
             // Connect to MongoDB
-            await this.client.connect();
+            // await this.client.connect();
 
             // Select database (will create if it doesn't exist)
             this.db = this.client.db('quickhire');
