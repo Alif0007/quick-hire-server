@@ -60,7 +60,7 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Sample CRUD endpoints for jobs
+// Jobs CRUD endpoints
 app.get('/api/jobs', async (req, res) => {
     try {
         const jobsCollection = database.collection('jobs');
@@ -79,9 +79,62 @@ app.get('/api/jobs', async (req, res) => {
     }
 });
 
+// Get single job by ID
+app.get('/api/jobs/:id', async (req, res) => {
+    try {
+        const jobsCollection = database.collection('jobs');
+        const jobId = req.params.id;
+
+        // Convert string ID to ObjectId if it's a valid ObjectId format
+        const ObjectId = require('mongodb').ObjectId;
+        let query;
+
+        try {
+            query = { _id: new ObjectId(jobId) };
+        } catch (error) {
+            // If not a valid ObjectId, search by string ID
+            query = { _id: jobId };
+        }
+
+        const job = await jobsCollection.findOne(query);
+
+        if (!job) {
+            return res.status(404).json({
+                success: false,
+                message: 'Job not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: job
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching job',
+            error: error.message
+        });
+    }
+});
+
+// Create a new job (Admin)
 app.post('/api/jobs', async (req, res) => {
     try {
         const jobsCollection = database.collection('jobs');
+
+        // Validate required fields
+        const requiredFields = ['title', 'company', 'location', 'salary', 'type'];
+        const missingFields = requiredFields.filter(field => !req.body[field]);
+
+        if (missingFields.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required fields',
+                missingFields
+            });
+        }
+
         const jobData = {
             ...req.body,
             createdAt: new Date(),
@@ -98,6 +151,138 @@ app.post('/api/jobs', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error creating job',
+            error: error.message
+        });
+    }
+});
+
+// Delete a job (Admin)
+app.delete('/api/jobs/:id', async (req, res) => {
+    try {
+        const jobsCollection = database.collection('jobs');
+        const jobId = req.params.id;
+
+        // Convert string ID to ObjectId
+        const ObjectId = require('mongodb').ObjectId;
+        let query;
+
+        try {
+            query = { _id: new ObjectId(jobId) };
+        } catch (error) {
+            query = { _id: jobId };
+        }
+
+        const result = await jobsCollection.deleteOne(query);
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Job not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Job deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting job',
+            error: error.message
+        });
+    }
+});
+
+// Applications endpoints
+app.get('/api/applications', async (req, res) => {
+    try {
+        const applicationsCollection = database.collection('applications');
+        const applications = await applicationsCollection.find({}).toArray();
+        res.json({
+            success: true,
+            data: applications,
+            count: applications.length
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching applications',
+            error: error.message
+        });
+    }
+});
+
+app.post('/api/applications', async (req, res) => {
+    try {
+        const applicationsCollection = database.collection('applications');
+
+        // Validate required fields
+        const requiredFields = ['jobId', 'applicantName', 'email', 'resume'];
+        const missingFields = requiredFields.filter(field => !req.body[field]);
+
+        if (missingFields.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required fields for application',
+                missingFields
+            });
+        }
+
+        const applicationData = {
+            ...req.body,
+            appliedAt: new Date(),
+            status: 'pending'
+        };
+
+        const result = await applicationsCollection.insertOne(applicationData);
+        res.status(201).json({
+            success: true,
+            message: 'Application submitted successfully',
+            data: { id: result.insertedId, ...applicationData }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error submitting application',
+            error: error.message
+        });
+    }
+});
+
+// Delete an application (Admin)
+app.delete('/api/applications/:id', async (req, res) => {
+    try {
+        const applicationsCollection = database.collection('applications');
+        const applicationId = req.params.id;
+
+        // Convert string ID to ObjectId
+        const ObjectId = require('mongodb').ObjectId;
+        let query;
+
+        try {
+            query = { _id: new ObjectId(applicationId) };
+        } catch (error) {
+            query = { _id: applicationId };
+        }
+
+        const result = await applicationsCollection.deleteOne(query);
+
+        if (result.deletedCount === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Application not found'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Application deleted successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error deleting application',
             error: error.message
         });
     }
@@ -132,9 +317,7 @@ const startServer = async () => {
         // Start Express server
         app.listen(PORT, () => {
             console.log(`✅ Server is running on port ${PORT}`);
-            console.log(`📡 API URL: http://localhost:${PORT}`);
-            console.log(`📊 Test connection: http://localhost:${PORT}/api/test-connection`);
-            console.log(`❤️  Health check: http://localhost:${PORT}/api/health`);
+
         });
     } catch (error) {
         console.error('❌ Failed to start server:', error);
